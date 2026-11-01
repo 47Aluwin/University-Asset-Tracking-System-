@@ -1,0 +1,6 @@
+{
+  "name": "uats-shared",
+  "private": true,
+  "type": "module",
+  "description": "Dependency-light code shared by the app (src/) and the API server (server/)."
+}

@@ -1,56 +1,81 @@
-# Welcome to your Expo app 👋
+# University Asset Tracking System (ATS)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A system for registering, labelling, verifying, relocating and maintaining university assets across
+departments. It has one central database, a mobile app for fieldwork, and a browser app for
+administration and reporting.
 
-## Get started
+**Current status: all 7 phases implemented, awaiting review — implementation-complete, not yet approved for
+production.** Accounts and access control; asset registration, QR labels and printing; post-registration review and
+correction; physical verification, schedules, relocation; condition, damage and department-managed maintenance;
+dashboard and four reports with PDF/Excel export; offline fieldwork with safe synchronisation; backups with tested
+restore. What production approval still needs (hosting, devices, printers, decisions) is in
+[docs/acceptance.md](docs/acceptance.md). See [docs/implementation-plan.md](docs/implementation-plan.md) for progress
+and [docs/decisions-and-limitations.md](docs/decisions-and-limitations.md) for open decisions.
 
-1. Install dependencies
+## Repository layout
 
-   ```bash
-   npm install
-   ```
+| Path | What it is |
+|---|---|
+| `src/` | Expo app (iOS, Android, browser). Screens are in `src/app/` (Expo Router). |
+| `server/` | API server (Node.js + Fastify) and database migrations (`server/migrations/`). |
+| `shared/` | Code used by both app and server: asset ID / QR formats, money, label layout and QR generation. |
+| `tests/` | Tests for `shared/`. |
+| `e2e/` | Browser journey tests that drive the real app against the real API. |
+| `docs/` | Architecture, data model, access control, hosting, testing, security, deployment. |
 
-2. Start the app
+## Prerequisites
 
-   ```bash
-   npx expo start
-   ```
+- Node.js 22.18 or newer (developed on 24.19).
+- No database install is needed for development: the server uses an embedded PostgreSQL (PGlite)
+  stored in `server/.data/`. Production uses a real PostgreSQL server (see [docs/deployment.md](docs/deployment.md)).
+- For the browser tests: Microsoft Edge or Google Chrome.
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Quick start (development)
 
 ```bash
-npm run reset-project
+# 1. Install
+npm install
+npm --prefix server install
+
+# 2. Create example departments, categories and locations (prefixed "Dev:") and the first administrator
+npm --prefix server run seed-dev
+npm --prefix server run create-admin -- --email you@university.example --name "Your Name"
+#    → prints a one-time link. Open it once the app is running to set your password.
+
+# 3. Start the API (http://localhost:4000)
+npm run server:dev
+
+# 4. In another terminal, start the app
+npx expo start          # press w for browser, or scan the QR code with Expo Go
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+To use the app on a phone, see `.env.example` for how to point it at your computer's API address.
 
-### Other setup steps
+## Checks
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+npm run server:test       # API + database tests (180 tests, embedded PostgreSQL)
+npm --prefix server run test:pg-wire   # the same tests through the production PostgreSQL driver
+npm run test:shared       # QR / label / money / date tests (12 tests)
+npm run server:typecheck
+npm run typecheck         # app
+npx expo lint
+npm run test:e2e          # browser journeys (builds web app, starts API, drives Edge/Chrome)
+node server/scripts/perf.ts 100000   # performance check with 100,000 assets (in memory)
+```
 
-## Learn more
+## Operations
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm --prefix server run backup            # database + uploaded files + manifest (stop the dev API first)
+npm --prefix server run restore -- <backup> --data-dir <new> --upload-dir <new>
+npm --prefix server run cleanup-uploads   # lists unused uploaded files (add -- --delete to remove)
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Documentation
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [Requirements](docs/requirements.md) · [Architecture](docs/architecture.md) · [Data model](docs/data-model.md)
+- [Access control](docs/access-control.md) · [Security](docs/security.md) · [Offline sync design](docs/offline-sync.md)
+- [QR codes and label printing](docs/qr-printing.md) · [Hosting comparison](docs/hosting-comparison.md) · [Deployment](docs/deployment.md) · [Testing](docs/testing.md)
+- [Decisions and limitations](docs/decisions-and-limitations.md) · [Implementation plan](docs/implementation-plan.md)
+- [User guide](docs/user-guide.md) · [Operations](docs/operations.md) · [Backup and recovery](docs/backup-recovery.md) · [Final acceptance](docs/acceptance.md)

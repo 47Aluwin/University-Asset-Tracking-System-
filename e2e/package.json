@@ -1,0 +1,16 @@
+{
+  "name": "uats-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Browser journeys against a running API and exported web app. Uses an installed Chrome/Edge; downloads no browser.",
+  "scripts": {
+    "phase1": "node web-phase1.mjs"
+  },
+  "dependencies": {
+    "jpeg-js": "^0.4.4",
+    "jsqr": "^1.4.0",
+    "pngjs": "^7.0.0",
+    "puppeteer-core": "^24.0.0",
+    "qrcode": "^1.5.4"
+  }
+}
